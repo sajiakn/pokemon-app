@@ -42,6 +42,18 @@ interface PokemonData {
 
 export function Pokemon() {
   const [pokemonList, setPokemonList] = useState<PokemonData[]>([]);
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
+
+  const sortPokemon = () => {
+    const newOrder = sortOrder === 'asc' ? 'desc' : 'asc';
+    setSortOrder(newOrder);
+    const sortedList = [...pokemonList].sort((a, b) => {
+      return newOrder === 'asc' 
+        ? a.name.localeCompare(b.name)
+        : b.name.localeCompare(a.name);
+    });
+    setPokemonList(sortedList);
+  };
 
   useEffect(() => {
     const fetchPokemon = async () => {
@@ -68,6 +80,14 @@ export function Pokemon() {
   return (
     <div className="flex flex-col h-screen">
       <main className="flex-1 bg-muted/10 py-8">
+        <div className="flex justify-end px-6 mb-4">
+          <button
+            onClick={sortPokemon}
+            className="bg-primary text-primary-foreground px-4 py-2 rounded-lg hover:bg-primary/90 transition-colors"
+          >
+            {sortOrder === 'asc' ? 'Sort by Name (A-Z)' : 'Sort by Name (Z-A)'}
+          </button>
+        </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 px-6">
           {pokemonList.map((pokemon) => (
             <Link href={`/pokemon/${pokemon.name}`} key={pokemon.name}>
