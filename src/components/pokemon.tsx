@@ -42,14 +42,20 @@ interface PokemonData {
 
 export function Pokemon() {
   const [pokemonList, setPokemonList] = useState<PokemonData[]>([]);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalCount, setTotalCount] = useState(0);
+  const itemsPerPage = 20;
 
   useEffect(() => {
     const fetchPokemon = async () => {
       try {
+        const offset = (currentPage - 1) * itemsPerPage;
         const response = await fetch(
-          "https://pokeapi.co/api/v2/pokemon?limit=20"
+          `https://pokeapi.co/api/v2/pokemon?limit=${itemsPerPage}&offset=${offset}`
         );
         const data = await response.json();
+        setTotalCount(data.count);
+        
         const results = await Promise.all(
           data.results.map(async (pokemon: { url: string }) => {
             const res = await fetch(pokemon.url);
@@ -57,13 +63,16 @@ export function Pokemon() {
           })
         );
         setPokemonList(results);
+        window.scrollTo({ top: 0, behavior: 'smooth' });
       } catch (error) {
         console.error("ポケモンデータの取得に失敗しました:", error);
       }
     };
 
     fetchPokemon();
-  }, []);
+  }, [currentPage]);
+
+  const totalPages = Math.ceil(totalCount / itemsPerPage);
 
   return (
     <div className="flex flex-col h-screen">
@@ -123,6 +132,26 @@ export function Pokemon() {
               </div>
             </Link>
           ))}
+        </div>
+        
+        <div className="flex justify-center items-center gap-4 mt-8 pb-8">
+          <button
+            onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+            disabled={currentPage === 1}
+            className="px-4 py-2 bg-primary text-primary-foreground rounded-lg disabled:opacity-50"
+          >
+            Previous
+          </button>
+          <span className="text-sm">
+            Page {currentPage} of {totalPages}
+          </span>
+          <button
+            onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+            disabled={currentPage === totalPages}
+            className="px-4 py-2 bg-primary text-primary-foreground rounded-lg disabled:opacity-50"
+          >
+            Next
+          </button>
         </div>
       </main>
     </div>
